@@ -73,6 +73,15 @@ def main():
                 else:
                     pcounter += 2
 
+            # SE Vx, Vy - (0x5xy0) Skip next instruction if Vx = Vy
+            case _ if curr_instr & 0xF000 == 0x5000:
+                vx = (curr_instr & 0x0F00) >> 8
+                vy = (curr_instr & 0x00F0) >> 4
+                if (vx_registers[vx] == vx_registers[vy]):
+                    pcounter += 4
+                else:
+                    pcounter += 2
+
             # LD Vx, byte - (0x6xkk) Set Vx = kk
             case _ if curr_instr & 0xF000 == 0x6000:
                 mod_register = (curr_instr & 0x0F00) >> 8
