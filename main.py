@@ -66,9 +66,17 @@ def main():
 
             # SE Vx, byte - (0x3xkk) Skip next instruction if Vx = kk
             case _ if curr_instr & 0xF000 == 0x3000:
-                reg_tocheck = (curr_instr & 0x0F00) >> 8
-                val_tocheck = curr_instr & 0x00FF
-                if (vx_registers[reg_tocheck] == val_tocheck):
+                reg = (curr_instr & 0x0F00) >> 8
+                val = curr_instr & 0x00FF
+                if (vx_registers[reg] == val):
+                    pcounter += 4
+                else:
+                    pcounter += 2
+
+            # SNE Vx, byte - (0x4xkk) Skip next instruction if Vx != kk
+            case _ if curr_instr & 0xF000 == 0x4000:
+                reg = (curr_instr & 0x0F00) >> 8
+                if (vx_registers[reg] != (curr_instr & 0x00FF)):
                     pcounter += 4
                 else:
                     pcounter += 2
@@ -84,9 +92,29 @@ def main():
 
             # LD Vx, byte - (0x6xkk) Set Vx = kk
             case _ if curr_instr & 0xF000 == 0x6000:
-                mod_register = (curr_instr & 0x0F00) >> 8
-                vx_registers[mod_register] = (curr_instr & 0x00FF)
+                reg = (curr_instr & 0x0F00) >> 8
+                vx_registers[reg] = (curr_instr & 0x00FF)
                 pcounter += 2
+
+            # ADD Vx, byte - (0x7xkk) Adds the value kk to the value of register Vx, then stores the result in Vx
+            case _ if curr_instr & 0xF000 == 0x7000:
+                reg = (curr_instr & 0x0F00) >> 8
+                add = curr_instr & 0x00FF
+                vx_registers[reg] = vx_registers[reg] + add
+                pcounter += 2
+
+            # SUB Vx, Vy - (0x8xy5) Set Vx = Vx - Vy, set VF = NOT borrow
+            case _ if curr_instr & 0xF00F == 0x8005:
+                vx = (curr_instr & 0x0F00) >> 8
+                vy = (curr_instr & 0x00F0) >> 4
+                if (vx_registers[vx] > vx_registers[vy]):
+                    # Underflow, do a little cheaty cheat >:3
+                    vx_registers[0xF] = 1
+                    vx_registers[vx] = (vx_registers[vy] + 0xFF) - vx_registers[vx]
+                else:
+                    # No underflow, subtract normally
+                    vx_registers[0xF] = 0
+                    vx_registers[vx] = vx_registers[vy] - vx_registers[vx]
 
         # Allow the user to quit by pressing the close button, kind of important
         for event in pygame.event.get():
