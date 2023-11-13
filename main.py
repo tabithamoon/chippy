@@ -115,6 +115,7 @@ def main():
                     # No underflow, subtract normally
                     vx_registers[0xF] = 0
                     vx_registers[vx] = vx_registers[vy] - vx_registers[vx]
+                pcounter += 2
 
         # Allow the user to quit by pressing the close button, kind of important
         for event in pygame.event.get():
