@@ -206,6 +206,19 @@ def main():
                 i_register = curr_instr & 0x0FFF
                 pcounter += 2
 
+            # LD B, Vx - (0xFx33) Store BCD representation of Vx in memory locations I, I+1, and I+2
+            case _ if curr_instr & 0xF0FF == 0xF033:
+                vx = ((curr_instr & 0x0F00) >> 8)
+                val = vx_registers[vx]
+                start = i_register
+                curr = start
+
+                for num in map(int, val):
+                    main_memory[curr] = num
+                    curr += curr
+                
+                pcounter += 2
+
             # LD [I], Vx - (0xFx55) Store registers V0 through Vx in memory starting at location I
             case _ if curr_instr & 0xF0FF == 0xF055:
                 vx = ((curr_instr & 0x0F00) >> 8) + 1 # Working around strange python behavior
