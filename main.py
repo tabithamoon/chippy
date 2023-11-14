@@ -100,7 +100,12 @@ def main():
             case _ if curr_instr & 0xF000 == 0x7000:
                 reg = (curr_instr & 0x0F00) >> 8
                 add = curr_instr & 0x00FF
-                vx_registers[reg] = vx_registers[reg] + add
+                res = vx_registers[reg] + add
+
+                # Overflow and roll back around if > 0xFF
+                if (res > 0xFF): res -= 0xFF
+
+                vx_registers[reg] = res
                 pcounter += 2
 
             # SUB Vx, Vy - (0x8xy5) Set Vx = Vx - Vy, set VF = NOT borrow
@@ -108,13 +113,28 @@ def main():
                 vx = (curr_instr & 0x0F00) >> 8
                 vy = (curr_instr & 0x00F0) >> 4
                 if (vx_registers[vx] > vx_registers[vy]):
-                    # Underflow, do a little cheaty cheat >:3
-                    vx_registers[0xF] = 1
-                    vx_registers[vx] = (vx_registers[vy] + 0xFF) - vx_registers[vx]
-                else:
                     # No underflow, subtract normally
+                    vx_registers[0xF] = 1
+                    vx_registers[vx] = vx_registers[vx] - vx_registers[vy]
+                else:
+                    # Underflow, do a little cheaty cheat >:3
                     vx_registers[0xF] = 0
+                    vx_registers[vx] = (vx_registers[vx] + 0xFF) - vx_registers[vy]
+                    
+                pcounter += 2
+
+            # SUBN Vx, Vy - (0x8xy7) Set Vx = Vy - Vx, set VF = NOT borrow
+            case _ if curr_instr & 0xF00F == 0x8007:
+                vx = (curr_instr & 0x0F00) >> 8
+                vy = (curr_instr & 0x00F0) >> 4
+
+                if (vx_registers[vy] > vx_registers[vx]):
+                    vx_registers[0xF] = 1
                     vx_registers[vx] = vx_registers[vy] - vx_registers[vx]
+                else:
+                    vx_registers[0xF] = 0
+                    vx_registers[vx] = (vx_registers[vy] + 0xFF) - vx_registers[vx]
+
                 pcounter += 2
 
         # Allow the user to quit by pressing the close button, kind of important
