@@ -160,6 +160,19 @@ def main():
                     
                 pcounter += 2
 
+            # SHR Vx{, Vy} - (0x8xy6) Set Vx = Vx SHR 1
+            case _ if curr_instr & 0xF00F == 0x8006:
+                vx = (curr_instr & 0x0F00) >> 8
+
+                if ((vx_registers[vx] & 0x01) == 0x01):
+                    vx_registers[0xF] = 1
+                else:
+                    vx_registers[0xF] = 0
+                
+                res = vx_registers[vx] // 2
+                vx_registers[vx] = res
+                pcounter += 2
+
             # SUBN Vx, Vy - (0x8xy7) Set Vx = Vy - Vx, set VF = NOT borrow
             case _ if curr_instr & 0xF00F == 0x8007:
                 vx = (curr_instr & 0x0F00) >> 8
