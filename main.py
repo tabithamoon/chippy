@@ -114,7 +114,6 @@ def main():
                 vy = (curr_instr & 0x00F0) >> 4
 
                 vx_registers[vx] = vx_registers[vx] | vx_registers[vy]
-
                 pcounter += 2
 
             # AND Vx, Vy - (0x8xy2) Set Vx = Vx AND Vy
@@ -123,8 +122,28 @@ def main():
                 vy = (curr_instr & 0x00F0) >> 4
 
                 vx_registers[vx] = vx_registers[vx] & vx_registers[vy]
-
                 pcounter += 2
+
+            # XOR Vx, Vy - (0x8xy3) Set Vx = Vx XOR Vy
+            case _ if curr_instr & 0xF00F == 0x8003:
+                vx = (curr_instr & 0x0F00) >> 8
+                vy = (curr_instr & 0x00F0) >> 4
+
+                vx_registers[vx] = vx_registers[vx] ^ vx_registers[vy]
+                pcounter += 2
+            
+            # ADD Vx, Vy - (0x8xy4) Set Vx = Vx + Vy, set VF = carry
+            case _ if curr_instr & 0xF00F == 0x8004:
+                vx = (curr_instr & 0x0F00) >> 8
+                vy = (curr_instr & 0x00F0) >> 4
+
+                res = vx_registers[vx] + vx_registers[vy]
+
+                if (res > 0xFF):
+                    vx_registers[0xF] = 1
+                    vx_registers[vx] = (res & 0x00FF)
+                else:
+                    vx_registers[vx] = res
 
             # SUB Vx, Vy - (0x8xy5) Set Vx = Vx - Vy, set VF = NOT borrow
             case _ if curr_instr & 0xF00F == 0x8005:
