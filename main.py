@@ -173,6 +173,20 @@ def main():
                     vx_registers[vx] = (vx_registers[vy] + 0xFF) - vx_registers[vx]
 
                 pcounter += 2
+            
+            # SHL Vx{, Vy} - (0x8xyE) Set Vx = Vx SHL 1
+            case _ if curr_instr & 0xF00F == 0x800E:
+                vx = (curr_instr & 0x0F00) >> 8
+
+                if ((vx_registers[vx] & 0x80) == 0x80):
+                    vx_registers[0xF] = 1
+                else:
+                    vx_registers[0xF] = 0
+                
+                res = vx_registers[vx] * 2
+                if (res > 0xFF): res -= 0xFF
+                vx_registers[vx] = res
+                pcounter += 2
 
         # Allow the user to quit by pressing the close button, kind of important
         for event in pygame.event.get():
