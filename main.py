@@ -201,6 +201,29 @@ def main():
                 vx_registers[vx] = res
                 pcounter += 2
 
+            # LD I, addr - Set I = 0xAnnn
+            case _ if curr_instr & 0xF000 == 0xA000:
+                i_register = curr_instr & 0x0FFF
+                pcounter += 2
+
+            # LD [I], Vx - (0xFx55) Store registers V0 through Vx in memory starting at location I
+            case _ if curr_instr & 0xF0FF == 0xF055:
+                vx = ((curr_instr & 0x0F00) >> 8) + 1 # Working around strange python behavior
+                start = i_register
+                end = start + vx 
+
+                main_memory[start:end] = vx_registers[0x0:vx]
+                pcounter += 2
+
+            # LD Vx, [I] - (0xFx65) Read registers V0 through Vx from memory starting at location I
+            case _ if curr_instr & 0xF0FF == 0xF065:
+                vx = ((curr_instr & 0x0F00) >> 8) + 1 # Working around strange python behavior
+                start = i_register
+                end = start + vx
+
+                vx_registers[0x0:vx] = main_memory[start:end]
+                pcounter += 2
+
         # Allow the user to quit by pressing the close button, kind of important
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
