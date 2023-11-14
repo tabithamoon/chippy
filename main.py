@@ -108,6 +108,15 @@ def main():
                 vx_registers[reg] = res
                 pcounter += 2
 
+            # OR Vx, Vy - (0x8xy1) Set Vx = Vx OR Vy
+            case _ if curr_instr & 0xF00F == 0x8001:
+                vx = (curr_instr & 0x0F00) >> 8
+                vy = (curr_instr & 0x00F0) >> 4
+
+                vx_registers[vx] = vx_registers[vx] | vx_registers[vy]
+
+                pcounter += 2
+
             # SUB Vx, Vy - (0x8xy5) Set Vx = Vx - Vy, set VF = NOT borrow
             case _ if curr_instr & 0xF00F == 0x8005:
                 vx = (curr_instr & 0x0F00) >> 8
